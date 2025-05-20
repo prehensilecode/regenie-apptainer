@@ -1,0 +1,51 @@
+# Filename: regenie.def
+
+Bootstrap: localimage
+From: ubuntu_oneapi.sif
+
+%files 
+
+./bgen-1.1.7.tgz /src/bgen-1.1.7.tgz
+./htslib-1.18.tar.bz2 /src/htslib-1.18.tar.bz2
+./regenie-4.1.tar.gz /src/regenie-4.1.tar.gz
+
+
+%post
+
+apt-get autoclean
+apt-get update
+
+cd /src \
+    && tar -xf htslib-1.18.tar.bz2 \
+    && cd htslib-1.18 \
+    && ./configure \
+    && make \
+    && make install
+
+cd /src \
+    && tar -zxf bgen-1.1.7.tgz --transform s/v1.1.7/bgen-1.1.7/ \
+    && cd bgen-1.1.7 \
+    && python3 waf configure \
+    && python3 waf \
+    && rm -f bgen-1.1.7.tgz
+
+# setting STATIC causes failures from trying to link to libssl/libcrypto
+# even though the static libs are part of libssl-dev which is already installed
+# try cmake
+cd /src \
+    && tar -zxf regenie-4.1.tar.gz \
+    && cd regenie-4.1 \
+    && mkdir BUILD \
+    && cd BUILD \
+    && export MKL_THREADING_LAYER=GNU \
+    && export BGEN_PATH=/src/bgen-1.1.7 \
+    && export HAS_BOOST_IOSTREAM=1 \
+    && export MKLROOT=/opt/intel/oneapi/mkl/2025.1 \
+    && export HTSLIB_PATH=/usr/local/lib \
+    && export STATIC=1 \
+    && cmake .. \
+    && make \
+    && cp regenie /usr/local/bin
+
+%runscript
+    /usr/local/bin/regenie "$@"
