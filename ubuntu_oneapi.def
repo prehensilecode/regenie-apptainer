@@ -1,0 +1,43 @@
+# Filename: ubuntu_oneapi.def
+
+Bootstrap: localimage
+From: ubuntu_jammy.sif
+
+%files 
+
+./intel_key.PUB /src/intel_key.PUB
+
+%post
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get autoclean
+apt-get update
+apt-get install -y \
+    apt-utils \
+    gcc-9 \
+    g++-9 \
+    gfortran-9 \
+    libz-dev \
+    bzip2 \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    cmake \
+    make \
+    gnupg \
+    python3 \
+    zlib1g-dev \
+    apt-transport-https \
+    ca-certificates \
+    libboost-iostreams-dev
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 60 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 70
+update-alternatives --install /usr/bin/f77 f77 /usr/bin/gfortran-9 70
+update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 70
+
+cat /src/intel_key.PUB | gpg --dearmor > /usr/share/keyrings/oneapi-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" > /etc/apt/sources.list.d/oneAPI.list \
+    && apt-get update \
+    && apt-get install -y intel-oneapi-mkl-devel=2025.1.0-801 \
+    && echo "MKL_THREADING_LAYER=GNU" >> /etc/environment
