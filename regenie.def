@@ -48,4 +48,4 @@ cd /src \
     && cp regenie /usr/local/bin
 
 %runscript
-    LC_ALL=C LANGUAGE="" /usr/local/bin/regenie "$@"
+    /usr/local/bin/regenie "$@"
